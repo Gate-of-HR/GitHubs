@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GitHub英語クイズゲーム</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+      background: linear-gradient(135deg, #f3f7ff 0%, #eefaf3 100%);
+      color: #222;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 760px;
+      background: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+      overflow: hidden;
+    }
+
+    .header {
+      background: #24292f;
+      color: #fff;
+      padding: 24px 20px;
+      text-align: center;
+    }
+
+    .header h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+    }
+
+    .header p {
+      margin: 0;
+      font-size: 14px;
+      opacity: 0.9;
+      line-height: 1.7;
+    }
+
+    .content {
+      padding: 24px 20px 28px;
+    }
+
+    .status {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .badge {
+      background: #f4f6f8;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-weight: 700;
+    }
+
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    .start-box,
+    .result-box {
+      text-align: center;
+      padding: 20px 8px 8px;
+    }
+
+    .start-box h2,
+    .result-box h2 {
+      margin-top: 0;
+      font-size: 26px;
+    }
+
+    .start-box p,
+    .result-box p {
+      line-height: 1.9;
+      color: #444;
+      margin-bottom: 20px;
+    }
+
+    .question-card {
+      background: #fafbfc;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 18px;
+    }
+
+    .question-label {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    .question-text {
+      font-size: 30px;
+      font-weight: 800;
+      margin-bottom: 10px;
+      color: #111;
+      word-break: break-word;
+    }
+
+    .question-sub {
+      font-size: 15px;
+      color: #666;
+      line-height: 1.8;
+    }
+
+    .choices {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .choice-btn {
+      width: 100%;
+      border: none;
+      border-radius: 14px;
+      padding: 16px 14px;
+      font-size: 16px;
+      font-weight: 700;
+      text-align: left;
+      background: #f3f6fb;
+      color: #222;
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+      box-shadow: 0 2px 0 rgba(0, 0, 0, 0.04);
+    }
+
+    .choice-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      background: #eaf2ff;
+    }
+
+    .choice-btn:disabled {
+      cursor: default;
+      opacity: 1;
+    }
+
+    .choice-btn.correct {
+      background: #dff7e8;
+      color: #0d6b38;
+      border: 2px solid #39b36b;
+    }
+
+    .choice-btn.wrong {
+      background: #fde7e7;
+      color: #b42318;
+      border: 2px solid #e85d5d;
+    }
+
+    .choice-btn.dim {
+      opacity: 0.7;
+    }
+
+    .feedback {
+      min-height: 120px;
+      background: #fffdf3;
+      border: 1px solid #f4e6a6;
+      border-radius: 14px;
+      padding: 16px;
+      line-height: 1.9;
+      display: none;
+    }
+
+    .feedback.show {
+      display: block;
+    }
+
+    .feedback-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .feedback.correct-text {
+      background: #f2fff6;
+      border-color: #b9e7c9;
+    }
+
+    .feedback.wrong-text {
+      background: #fff5f5;
+      border-color: #f3b4b4;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 999px;
+      padding: 14px 22px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .btn-primary {
+      background: #24292f;
+      color: #fff;
+    }
+
+    .btn-secondary {
+      background: #eef2f7;
+      color: #222;
+    }
+
+    .score-big {
+      font-size: 52px;
+      font-weight: 900;
+      margin: 10px 0;
+      color: #24292f;
+    }
+
+    .comment {
+      background: #f7f9fc;
+      border-radius: 14px;
+      padding: 14px;
+      margin: 18px auto 0;
+      max-width: 520px;
+      line-height: 1.8;
+      color: #444;
+    }
+
+    .small-note {
+      margin-top: 16px;
+      font-size: 13px;
+      color: #666;
+      line-height: 1.8;
+    }
+
+    @media (max-width: 600px) {
+      .header h1 {
+        font-size: 24px;
+      }
+
+      .question-text {
+        font-size: 24px;
+      }
+
+      .choice-btn {
+        font-size: 15px;
+        padding: 14px 12px;
+      }
+
+      .score-big {
+        font-size: 42px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <h1>GitHub英語クイズゲーム</h1>
+      <p>
+        GitHubでよく出る英語の意味を、4択クイズで楽しく覚えよう。<br>
+        そのままブラウザで遊べて、GitHub Pagesにも上げやすい1ファイル版です。
+      </p>
+    </div>
+
+    <div class="content">
+      <div class="status" id="statusArea" style="display: none;">
+        <div class="badge" id="progressText">1 / 10 問</div>
+        <div class="badge" id="scoreText">スコア：0</div>
+      </div>
+
+      <section class="screen active" id="startScreen">
+        <div class="start-box">
+          <h2>スタート</h2>
+          <p>
+            出題されるGitHub英語に対して、正しい意味を4択から選んでください。<br>
+            全10問です。1問ごとに解説も見られます。
+          </p>
+          <div class="controls">
+            <button class="btn btn-primary" id="startBtn">クイズを始める</button>
+          </div>
+          <div class="small-note">
+            収録語句例：Repository / Public / Upload files / Commit changes / Settings / Pages など
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" id="quizScreen">
+        <div class="question-card">
+          <div class="question-label">この英語の意味は？</div>
+          <div class="question-text" id="questionText">Repository</div>
+          <div class="question-sub" id="questionSub">GitHubでよく出る英語です。</div>
+        </div>
+
+        <div class="choices" id="choicesArea"></div>
+
+        <div class="feedback" id="feedbackBox">
+          <div class="feedback-title" id="feedbackTitle"></div>
+          <div id="feedbackBody"></div>
+        </div>
+
+        <div class="controls">
+          <button class="btn btn-secondary" id="nextBtn" style="display: none;">次の問題へ</button>
+        </div>
+      </section>
+
+      <section class="screen" id="resultScreen">
+        <div class="result-box">
+          <h2>結果発表</h2>
+          <div class="score-big" id="finalScore">8 / 10</div>
+          <p id="resultMessage">よくできました！</p>
+          <div class="comment" id="resultComment"></div>
+          <div class="controls">
+            <button class="btn btn-primary" id="restartBtn">もう一度遊ぶ</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const quizData = [
+      {
+        term: "Repository",
+        sub: "GitHubで最重要の基本用語です。",
+        correct: "ファイルを入れておく箱",
+        choices: [
+          "ファイルを入れておく箱",
+          "公開されたサイトを見るボタン",
+          "変更を元に戻す機能",
+          "作業の分かれ道"
+        ],
+        explanation: "Repository は、HTMLやCSSや画像など、サイトのファイル一式を入れておく箱のことです。"
+      },
+      {
+        term: "Public",
+        sub: "公開範囲に関する英語です。",
+        correct: "誰でも見られる設定",
+        choices: [
+          "自分だけ見られる設定",
+          "誰でも見られる設定",
+          "ファイルをアップすること",
+          "下書き保存"
+        ],
+        explanation: "Public は、インターネット上の人が見られる公開状態のことです。"
+      },
+      {
+        term: "Private",
+        sub: "Public と対になる英語です。",
+        correct: "自分や許可した人だけ見られる設定",
+        choices: [
+          "自動公開される設定",
+          "一時停止の設定",
+          "自分や許可した人だけ見られる設定",
+          "画像専用フォルダ"
+        ],
+        explanation: "Private は、非公開の状態です。自分や許可した人だけが見られます。"
+      },
+      {
+        term: "Upload files",
+        sub: "ファイル追加時によく見るボタンです。",
+        correct: "パソコンのファイルをGitHubに入れる",
+        choices: [
+          "サイトを削除する",
+          "パソコンのファイルをGitHubに入れる",
+          "サイトを見る",
+          "英語を日本語に変換する"
+        ],
+        explanation: "Upload files は、手元の index.html や画像ファイルなどをGitHubにアップする操作です。"
+      },
+      {
+        term: "Commit changes",
+        sub: "ファイルを入れた後や編集後によく出ます。",
+        correct: "変更を保存確定する",
+        choices: [
+          "変更を保存確定する",
+          "設定画面を開く",
+          "公開URLを消す",
+          "他人に共有する"
+        ],
+        explanation: "Commit changes は、変更内容を履歴つきで保存する操作です。"
+      },
+      {
+        term: "Settings",
+        sub: "公開設定に入る時によく押します。",
+        correct: "設定画面",
+        choices: [
+          "出題一覧",
+          "設定画面",
+          "写真置き場",
+          "公開URL"
+        ],
+        explanation: "Settings は設定画面です。GitHub Pagesの公開設定に進む入口でもあります。"
+      },
+      {
+        term: "Pages",
+        sub: "Webサイト公開に直結する重要単語です。",
+        correct: "GitHub Pages の公開設定",
+        choices: [
+          "画像一覧",
+          "利用規約",
+          "GitHub Pages の公開設定",
+          "会話履歴"
+        ],
+        explanation: "Pages は、GitHubの中でWebサイト公開を設定する場所です。"
+      },
+      {
+        term: "Branch",
+        sub: "GitHubの基礎用語です。",
+        correct: "作業の分かれ道",
+        choices: [
+          "画像圧縮機能",
+          "作業の分かれ道",
+          "削除済みフォルダ",
+          "点数表示"
+        ],
+        explanation: "Branch は、メインとは別に作業を進めるための分かれ道のようなものです。"
+      },
+      {
+        term: "main",
+        sub: "Pages設定でもよく見ます。",
+        correct: "基本のブランチ名",
+        choices: [
+          "公開サイトのURL",
+          "画像フォルダ名",
+          "基本のブランチ名",
+          "文字サイズの設定"
+        ],
+        explanation: "main は、基本となるブランチ名です。初心者はまず main を使うことが多いです。"
+      },
+      {
+        term: "Visit site",
+        sub: "公開後に確認する時によく使います。",
+        correct: "公開されたサイトを見る",
+        choices: [
+          "ファイル名を変える",
+          "公開されたサイトを見る",
+          "設定を削除する",
+          "パスワードを変更する"
+        ],
+        explanation: "Visit site は、GitHub Pagesで公開されたサイトを開いて確認するためのボタンです。"
+      },
+      {
+        term: "/(root)",
+        sub: "Pagesの公開元フォルダ設定で出ることがあります。",
+        correct: "一番上の階層",
+        choices: [
+          "一番下の階層",
+          "画像専用フォルダ",
+          "一番上の階層",
+          "公開禁止エリア"
+        ],
+        explanation: "/(root) は、そのブランチの一番上の場所です。最初はここを公開元にすると分かりやすいです。"
+      },
+      {
+        term: "Create repository",
+        sub: "最初のスタート地点になる操作です。",
+        correct: "新しいリポジトリを作る",
+        choices: [
+          "新しい画像を作る",
+          "新しいリポジトリを作る",
+          "英語を翻訳する",
+          "サイトを閉じる"
+        ],
+        explanation: "Create repository は、新しいファイル置き場を作ることです。"
+      }
+    ];
+
+    let quizList = [];
+    let currentIndex = 0;
+    let score = 0;
+    let answered = false;
+
+    const startScreen = document.getElementById("startScreen");
+    const quizScreen = document.getElementById("quizScreen");
+    const resultScreen = document.getElementById("resultScreen");
+
+    const statusArea = document.getElementById("statusArea");
+    const progressText = document.getElementById("progressText");
+    const scoreText = document.getElementById("scoreText");
+
+    const questionText = document.getElementById("questionText");
+    const questionSub = document.getElementById("questionSub");
+    const choicesArea = document.getElementById("choicesArea");
+
+    const feedbackBox = document.getElementById("feedbackBox");
+    const feedbackTitle = document.getElementById("feedbackTitle");
+    const feedbackBody = document.getElementById("feedbackBody");
+    const nextBtn = document.getElementById("nextBtn");
+
+    const finalScore = document.getElementById("finalScore");
+    const resultMessage = document.getElementById("resultMessage");
+    const resultComment = document.getElementById("resultComment");
+
+    const startBtn = document.getElementById("startBtn");
+    const restartBtn = document.getElementById("restartBtn");
+
+    function shuffle(array) {
+      const copied = [...array];
+      for (let i = copied.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copied[i], copied[j]] = [copied[j], copied[i]];
+      }
+      return copied;
+    }
+
+    function startGame() {
+      quizList = shuffle(quizData).slice(0, 10).map(item => ({
+        ...item,
+        choices: shuffle(item.choices)
+      }));
+      currentIndex = 0;
+      score = 0;
+      answered = false;
+
+      showScreen("quiz");
+      statusArea.style.display = "flex";
+      updateStatus();
+      renderQuestion();
+    }
+
+    function showScreen(type) {
+      startScreen.classList.remove("active");
+      quizScreen.classList.remove("active");
+      resultScreen.classList.remove("active");
+
+      if (type === "start") startScreen.classList.add("active");
+      if (type === "quiz") quizScreen.classList.add("active");
+      if (type === "result") resultScreen.classList.add("active");
+    }
+
+    function updateStatus() {
+      progressText.textContent = `${currentIndex + 1} / ${quizList.length} 問`;
+      scoreText.textContent = `スコア：${score}`;
+    }
+
+    function renderQuestion() {
+      answered = false;
+      const current = quizList[currentIndex];
+
+      questionText.textContent = current.term;
+      questionSub.textContent = current.sub;
+      choicesArea.innerHTML = "";
+      nextBtn.style.display = "none";
+
+      feedbackBox.className = "feedback";
+      feedbackTitle.textContent = "";
+      feedbackBody.textContent = "";
+
+      current.choices.forEach(choice => {
+        const btn = document.createElement("button");
+        btn.className = "choice-btn";
+        btn.textContent = choice;
+        btn.addEventListener("click", () => handleAnswer(choice, btn));
+        choicesArea.appendChild(btn);
+      });
+
+      updateStatus();
+    }
+
+    function handleAnswer(selectedChoice, selectedBtn) {
+      if (answered) return;
+      answered = true;
+
+      const current = quizList[currentIndex];
+      const buttons = document.querySelectorAll(".choice-btn");
+      const isCorrect = selectedChoice === current.correct;
+
+      if (isCorrect) {
+        score++;
+      }
+
+      buttons.forEach(btn => {
+        btn.disabled = true;
+        const text = btn.textContent;
+
+        if (text === current.correct) {
+          btn.classList.add("correct");
+        } else if (text === selectedChoice && !isCorrect) {
+          btn.classList.add("wrong");
+        } else {
+          btn.classList.add("dim");
+        }
+      });
+
+      feedbackBox.classList.add("show");
+      if (isCorrect) {
+        feedbackBox.classList.add("correct-text");
+        feedbackTitle.textContent = "正解！";
+        feedbackBody.innerHTML = `
+          <strong>答え：</strong> ${current.correct}<br>
+          <strong>解説：</strong> ${current.explanation}
+        `;
+      } else {
+        feedbackBox.classList.add("wrong-text");
+        feedbackTitle.textContent = "不正解";
+        feedbackBody.innerHTML = `
+          <strong>正しい答え：</strong> ${current.correct}<br>
+          <strong>解説：</strong> ${current.explanation}
+        `;
+      }
+
+      scoreText.textContent = `スコア：${score}`;
+      nextBtn.style.display = "inline-block";
+    }
+
+    function goNext() {
+      currentIndex++;
+      if (currentIndex < quizList.length) {
+        renderQuestion();
+      } else {
+        showResult();
+      }
+    }
+
+    function showResult() {
+      showScreen("result");
+      statusArea.style.display = "none";
+      finalScore.textContent = `${score} / ${quizList.length}`;
+
+      let message = "";
+      let comment = "";
+
+      if (score === quizList.length) {
+        message = "満点です！すばらしい！";
+        comment = "GitHubの基本英語はかなり理解できています。この調子なら、GitHub Pagesの公開作業もかなり進めやすいです。";
+      } else if (score >= 8) {
+        message = "とても良いです！";
+        comment = "かなり理解できています。あとは実際にGitHubを触りながら覚えると、もっと定着しやすいです。";
+      } else if (score >= 5) {
+        message = "半分以上正解です！";
+        comment = "基礎はつかめています。特に Repository、Upload files、Commit changes、Pages の4つを重点的に覚えると実践しやすいです。";
+      } else {
+        message = "ここから伸びます！";
+        comment = "最初はみんな迷います。英語そのものより、『何を押すボタンか』で覚えるとかなり楽になります。";
+      }
+
+      resultMessage.textContent = message;
+      resultComment.textContent = comment;
+    }
+
+    startBtn.addEventListener("click", startGame);
+    nextBtn.addEventListener("click", goNext);
+    restartBtn.addEventListener("click", startGame);
+  </script>
+</body>
+</html>
